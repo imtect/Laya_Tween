@@ -122,6 +122,41 @@ export default class MtTween{
         }
         return null;
     }
+
+        /**
+     * 透明度 改变Target的透明度，必须将模型的RenderMode改成Transparent,多个材质球
+     * @param target Target,必须有MeshRender
+     * @param aplha 透明度
+     * @param duration 缓动的时间
+     * @param ease 缓动方式
+     * @param complete 完成回掉
+     * @param delay 延迟缓动时间
+     * @param coverBefore 是否覆盖之前的缓动。
+     * @param autoRecover 是否自动回收，默认为true，缓动结束之后自动回收到对象池。
+     */
+    static MultiAlpha(target:MeshSprite3D,aplha:number,duration:number,ease?:Function,complete?:Handler,delay?:number,coverBefore?:boolean,autoRecover?:boolean){
+        if(target == null) return;
+        let render:Laya.MeshRenderer = target.meshRenderer;
+        if(render && render.materials){
+
+            for(let i=0;i<render.materials.length;i++){
+                let mat:Laya.BlinnPhongMaterial = render.materials[i]  as Laya.BlinnPhongMaterial;
+                mat.renderMode = Laya.BlinnPhongMaterial.RENDERMODE_TRANSPARENT;
+                let albedo = mat.albedoColor;
+                if(albedo){
+                    let tween = Laya.Tween.to(albedo,{ 
+                        w:aplha,
+                        update:new Handler(target,function(){
+                            this.meshRenderer.materials[i].albedoColor = albedo;
+                        })
+                    },duration,ease,Handler.create(target,()=>{
+                        if(aplha == 1 ) mat.renderMode = Laya.BlinnPhongMaterial.RENDERMODE_OPAQUE;
+                        if(complete) complete.run();
+                    }),delay,coverBefore,autoRecover);    
+                }
+            }
+        }
+    }
 }
 
 
